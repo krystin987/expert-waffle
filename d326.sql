@@ -1,4 +1,4 @@
-B.
+-- B.
 CREATE OR REPLACE FUNCTION calculate_rental_duration(rental_date DATE, return_date DATE)
 RETURNS integer as $$
 BEGIN
@@ -16,7 +16,7 @@ FROM film f
 JOIN rental r ON f.film_id = r.rental_id
 GROUP BY f.film_id, f.title;
 
-C.
+-- C.
 CREATE TABLE detailed_table(
       film_id SERIAL PRIMARY KEY,
       title VARCHAR(255) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE summary_table(
       most_popular_film VARCHAR(255),
       top_actor TEXT
 )
-D.
+-- D.
 SELECT
       f.film_id as film_id,
       f.title AS title,
@@ -67,7 +67,7 @@ GROUP BY
 ORDER BY
       total_rentals DESC;
 
-E.
+-- E.
 CREATE OR REPLACE FUNCTION update_summary_table()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -116,7 +116,7 @@ VALUES('Comedy Night', 'Action', 2021, 3.99, 200, 798.00, 4.0, 'Jane Smith');
 INSERT INTO detailed_table(title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
 VALUES('Action Hero 2', 'Action', 2023, 5.49, 250, 1372.50, 4.2, 'Jane Doe');
 
-F.
+-- F.
 CREATE OR REPLACE PROCEDURE refresh_report_tables()
 LANGUAGE plpgsql
 AS $$
