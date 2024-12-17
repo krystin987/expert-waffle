@@ -118,12 +118,6 @@ EXECUTE FUNCTION update_summary_table();
 INSERT INTO detailed_table (title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
 VALUES ('Action Hero 1', 'Action', 2022, 4.99, 150, 748.50, 3.5, 'John Doe');
 
--- ERROR:  column "title" of relation "detailed_table" does not exist
--- LINE 1: INSERT INTO detailed_table (title, genre, release_year, rent...
---                                     ^
--- SQL state: 42703
--- Character: 29
-
 INSERT INTO detailed_table (title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
 VALUES ('Comedy Night', 'Action', 2021, 3.99, 200, 798.00, 4.0, 'Jane Smith');
 
@@ -182,17 +176,23 @@ BEGIN
 		genre;
 END;
 $$
-            
+
+
 SELECT
-      genre,
-      SUM(total_rentals) AS total_rentals,
-      SUM(total_revenue) AS total_revenue
-FROM
-      detailed_table
+	genre,
+	SUM(total_rentals) AS total_rentals,
+	SUM(total_revenue) AS total_revenue
+	FROM
+	detailed_table
 GROUP BY
-      genre;
+	genre;
 
 
 -- CALL refresh_report_tables();
 -- CALL update_summary_table();
 
+ERROR:  relation "film" does not exist
+LINE 2: FROM film f
+             ^
+SQL state: 42P01
+Character: 129
