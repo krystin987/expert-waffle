@@ -17,6 +17,10 @@ JOIN rental r ON f.film_id = r.rental_id
 GROUP BY f.film_id, f.title;
 
 -- C.
+
+DROP TABLE IF EXISTS detailed_table;
+DROP TABLE IF EXISTS summary_table;
+
 CREATE TABLE detailed_table(
     film_id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
