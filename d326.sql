@@ -71,35 +71,38 @@ ORDER BY
 CREATE OR REPLACE FUNCTION update_summary_table()
 RETURNS TRIGGER AS $$
 BEGIN
-	IF EXISTS (SELECT 1 FROM summary_table WHERE genre = NEW.genre) THEN
-		UPDATE summary_table
-		SET
-			  total_rentals = total_rentals + NEW.total_rentals,
-			  total_revenue = total_revenue + NEW.total_revenue,
-			  avg_rental_rate =
-					(total_revenue + NEW.total_revenue) / (total_rentals + NEW.total_rentals),
-			  most_popular_film = CASE
-					WHEN NEW.total_rentals >
-						  (SELECT MAX(total_rentals)
-						   FROM detailed_table dt
-						   WHERE dt.genre = NEW.genre)
-					THEN NEW.title
-							ELSE most_popular_film END
-		WHERE genre = NEW.genre;
-	ELSE
-		INSERT INTO summary_table(genre, total_rentals, total_revenue, avg_rental_rate, most_popular_film, top_actor)
-		VALUES(
-			  NEW.genre,
-			  NEW.total_rentals,
-			  NEW.total_revenue,
-			  NEW.rental_rate,
-			  NEW.title,
-			  NEW.top_actor
-			  );
-		END IF;
-		RETURN NULL;
-	END;
-	$$ LANGUAGE plpgsql
+    -- Check if the genre already exists in the summary table
+    IF EXISTS (SELECT 1 FROM summary_table WHERE genre = NEW.genre) THEN
+        -- Update the existing row for the genre
+        UPDATE summary_table
+        SET
+            total_rentals = total_rentals + NEW.total_rentals,
+            total_revenue = total_revenue + NEW.total_revenue,
+            avg_rental_rate = (
+                SELECT (total_revenue + NEW.total_revenue) / (total_rentals + NEW.total_rentals)
+                FROM summary_table WHERE genre = NEW.genre
+            ),
+            most_popular_film = CASE 
+                WHEN NEW.total_rentals > total_rentals THEN NEW.title 
+                ELSE most_popular_film 
+            END
+        WHERE genre = NEW.genre;
+    ELSE
+        -- Insert a new row if the genre does not exist
+        INSERT INTO summary_table (genre, total_rentals, total_revenue, avg_rental_rate, most_popular_film, top_actor)
+        VALUES (
+            NEW.genre,
+            NEW.total_rentals,
+            NEW.total_revenue,
+            NEW.rental_rate,
+            NEW.title,
+            NEW.top_actor
+        );
+    END IF;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 --  create trigger for E
 CREATE TRIGGER trigger_update_summary_table
@@ -108,14 +111,15 @@ FOR EACH ROW
 EXECUTE FUNCTION update_summary_table();
 
 -- data for E
-INSERT INTO detailed_table( title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
-VALUES('Action Hero 1', 'Action', 2022, 4.99, 150, 748.5, 3.5, 'John Doe');
+INSERT INTO detailed_table (title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
+VALUES ('Action Hero 1', 'Action', 2022, 4.99, 150, 748.50, 3.5, 'John Doe');
 
-INSERT INTO detailed_table(title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
-VALUES('Comedy Night', 'Action', 2021, 3.99, 200, 798.00, 4.0, 'Jane Smith');
+INSERT INTO detailed_table (title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
+VALUES ('Comedy Night', 'Action', 2021, 3.99, 200, 798.00, 4.0, 'Jane Smith');
 
-INSERT INTO detailed_table(title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
-VALUES('Action Hero 2', 'Action', 2023, 5.49, 250, 1372.50, 4.2, 'Jane Doe');
+INSERT INTO detailed_table (title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
+VALUES ('Funny Times', 'Comedy', 2023, 5.49, 120, 658.80, 4.1, 'Jane Doe');
+
 
 -- F.
 CREATE OR REPLACE PROCEDURE refresh_report_tables()
