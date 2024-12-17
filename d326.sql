@@ -136,50 +136,50 @@ CREATE OR REPLACE PROCEDURE refresh_report_tables()
 LANGUAGE plpgsql
 AS $$
 BEGIN
-      TRUNCATE TABLE detailed_table RESTART IDENTITY;
-      TRUNCATE TABLE summary_table RESTART IDENTITY;
+	TRUNCATE TABLE detailed_table RESTART IDENTITY;
+	TRUNCATE TABLE summary_table RESTART IDENTITY;
 
-      INSERT INTO detailed_table(film_id, title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
-      SELECT
-      f.film_id as film_id,
-      f.title AS title,
-      c.name AS genre,
-      f.release_year AS release_year,
-      f.rental_rate AS rental_rate,
-      COUNT(r.rental_id) AS total_rentals,
-      SUM(f.rental_rate) AS total_revenue,
-      AVG(DATE_PART('day', COALESCE(r.return_date, CURRENT_DATE) - r.rental_date)) AS avg_rental_duration,
-      STRING_AGG(a.first_name || ' ' || a.last_name, ',') AS top_actor
+	INSERT INTO detailed_table(film_id, title, genre, release_year, rental_rate, total_rentals, total_revenue, avg_rental_duration, top_actor)
+	SELECT
+	f.film_id as film_id,
+	f.title AS title,
+	c.name AS genre,
+	f.release_year AS release_year,
+	f.rental_rate AS rental_rate,
+	COUNT(r.rental_id) AS total_rentals,
+	SUM(f.rental_rate) AS total_revenue,
+	AVG(DATE_PART('day', COALESCE(r.return_date, CURRENT_DATE) - r.rental_date)) AS avg_rental_duration,
+	STRING_AGG(a.first_name || ' ' || a.last_name, ',') AS top_actor
 
-      FROM
-            film f
-      JOIN
-            inventory i ON f.film_id = i.film_id
-      JOIN
-            rental r ON i.inventory_id = r.inventory_id
-      LEFT JOIN
-            film_actor fa ON f.film_id = fa.film_id
-      LEFT JOIN
-            actor a ON fa.actor_id = a.actor_id
-      JOIN
-            film_category fc ON f.film_id = fc.film_id
-      JOIN
-            category c ON fc.category_id = c.category_id
-      GROUP BY
-            f.film_id, f.title, c.name, f.release_year, f.rental_rate;
+	FROM
+		film f
+	JOIN
+		inventory i ON f.film_id = i.film_id
+	JOIN
+		rental r ON i.inventory_id = r.inventory_id
+	LEFT JOIN
+		film_actor fa ON f.film_id = fa.film_id
+	LEFT JOIN
+		actor a ON fa.actor_id = a.actor_id
+	JOIN
+		film_category fc ON f.film_id = fc.film_id
+	JOIN
+		category c ON fc.category_id = c.category_id
+	GROUP BY
+		f.film_id, f.title, c.name, f.release_year, f.rental_rate;
 
-      INSERT INTO summary_table(genre, total_rentals, total_revenue, avg_rental_rate, most_popular_film, top_actor)
-      SELECT
-            genre,
-            SUM(total_rentals) AS total_rentals,
-            SUM(total_revenue) AS total_revenue,
-            AVG(rental_rate) AS avg_rental_rate,
-            MAX(title) AS most_popular_film,
-            STRING_AGG(DISTINCT top_actor, ',') AS top_actor
-      FROM
-            detailed_table
-      GROUP BY
-            genre;
+	INSERT INTO summary_table(genre, total_rentals, total_revenue, avg_rental_rate, most_popular_film, top_actor)
+	SELECT
+		genre,
+		SUM(total_rentals) AS total_rentals,
+		SUM(total_revenue) AS total_revenue,
+		AVG(rental_rate) AS avg_rental_rate,
+		MAX(title) AS most_popular_film,
+		STRING_AGG(DISTINCT top_actor, ',') AS top_actor
+	FROM
+		detailed_table
+	GROUP BY
+		genre;
 END;
 $$
             
